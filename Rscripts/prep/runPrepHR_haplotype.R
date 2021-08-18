@@ -1,0 +1,192 @@
+source("/home/yn259/workspace/GrapeGS/Rscripts/prep/analysisPrep.R")
+
+# rh Filtered
+# GRM
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/grm.incidence.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/grm.snp.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/grm.maf.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+# GRM
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/drm.incidence.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/drm.snp.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/drm.maf.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+ 
+# matrix
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/matrix.incidence.txt",
+  isGRM = FALSE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/matrix.snp.txt",
+  isGRM = FALSE,
+  colFilter = TRUE,
+  isBase = TRUE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.filtered',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/filtered/matrix.maf.txt",
+  isGRM = FALSE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+
+
+# rh Not-Filtered
+# GRM
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/grm.incidence.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/grm.snp.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/grm.maf.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+# DRM
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/drm.incidence.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/drm.snp.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/drm.maf.txt",
+  isGRM = TRUE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+# matrix
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/matrix.incidence.txt",
+  isGRM = FALSE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/matrix.snp.txt",
+  isGRM = FALSE,
+  colFilter = TRUE,
+  isBase = TRUE
+)
+
+analysisprep(
+  outdir="/media/yn259/data/research/HR",
+  outfolder = 'rh.none',
+  phenofilename = "/media/yn259/data/research/HR/phenos/HCR.txt",
+  genofilename = "/media/yn259/data/research/HR/rh/none/matrix.maf.txt",
+  isGRM = FALSE,
+  colFilter = TRUE,
+  isBase = FALSE
+)
