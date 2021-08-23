@@ -1,12 +1,11 @@
 analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=FALSE, colFilter=FALSE, isBase=FALSE){
-  outdir="/media/yn259/data/research/HC"
-  outfolder = 'snp.none'
-  phenofilename = "/media/yn259/data/research/HC/phenos/GDD.csv"
-  genofilename = "/media/yn259/data/research/HC/snp/none/grm.incidence.txt"
-  isGRM = TRUE
-  colFilter = TRUE
-  isBase = FALSE
-  useRownames = TRUE
+  # outdir="/media/yn259/data/research/HC"
+  # outfolder = 'gbs.filtered'
+  # phenofilename = "/media/yn259/data/research/HC/phenos/GDD.csv"
+  # genofilename = "/media/yn259/data/research/HC/gbs/filtered/matrix.incidence.txt"
+  # isGRM = FALSE
+  # colFilter = TRUE
+  # isBase = FALSE
   
   source('/home/yn259/workspace/GrapeGS/Rscripts/grm/raw.data.R')
   outdir = file.path(outdir, "analysis")
@@ -15,8 +14,7 @@ analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=F
   
   # load and prep phenotype data
   sep = ifelse(endsWith(phenofilename, ".csv"), ",", "\t")
-  # phenoDat = read.table(phenofilename, header=TRUE, sep=sep, row.names=1, fileEncoding="UTF-16LE")
-  phenoDat = read.table(phenofilename, header=TRUE, sep=sep, row.names=1)
+  phenoDat = read.table(phenofilename, header=TRUE, sep=sep)
   phenoDat = as.matrix(phenoDat)
   
   # load GRM data
@@ -41,9 +39,7 @@ analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=F
     colnames(genoDat) = sapply(strsplit(colnames(genoDat), '\\.'), '[[', 1)
     rownames(genoDat) = sapply(strsplit(rownames(genoDat), ':'), '[[', 1)
   }
-  if(substr(rownames(phenoDat)[1], 1,1) != 'X'){
-    rownames(phenoDat) = paste('X', rownames(phenoDat), sep = '') 
-  }
+ 
   rownames(genoDat) = paste('X', rownames(genoDat), sep = '') 
   genoName = tools::file_path_sans_ext(basename(genofilename))
   
@@ -51,23 +47,28 @@ analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=F
   genodir = file.path(outdir, paste(genoName, outfolder, sep = '.'))
   dir.create(genodir, showWarnings = FALSE)
   cmd = c()
-  for(phenoIndex in 1:length(phenoDat[1,])){
-    phenoIndex = 5
-    P = phenoDat[,phenoIndex]
-    P = P[!is.na(P)]
+  for(phenoIndex in 5:length(phenoDat[1,])){
+    # phenoIndex = 5
     phenoName = colnames(phenoDat)[phenoIndex]
+    P = phenoDat[, c(1:4, phenoIndex)]
+    # P = P[!is.na(P)]
+    P = P[!is.na(P[, phenoName]),]
     geno = genoDat
     
     # Filter GRM
     lines = c()
     # headers = c()
-    for(item in names(P)){
+    P[, 'Genotype'] = paste('X', P[, 'Genotype'], sep='')
+    linenames = if(isGRM) unique(P[, 'Genotype']) else P[, 'Genotype']
+    for(item in linenames){
+      # for(item in names(P)){
       if(item %in% rownames(geno)){
         lines = append(lines, item)
         # headers = append(headers, paste('X', item, sep=""))
       }
     }
-    P = P[lines]
+    P = P[P[,'Genotype'] %in% lines,]
+    
     if(isGRM){
       geno = geno[lines, lines] 
     }else{
@@ -78,20 +79,27 @@ analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=F
     dir.create(phenodir, showWarnings = FALSE)
     
     if(isGRM){
+      model_term = '~ mu Year !r grm1(Genotype)'
       dir.create(file.path(phenodir, '0'), showWarnings = FALSE)
-      write.table(P, file = file.path(phenodir, '0', 'data.asd'), sep = '\t', col.names = !isGRM, quote = FALSE) 
+      write.table(P, file = file.path(phenodir, '0', 'data.asd'), sep = '\t', 
+                  col.names = !isGRM, row.names = F, quote = FALSE) 
       as0 <- file(file.path(phenodir, '0', paste(phenoName, '.as', sep = '')))
+      factors = c()
+      for (i in colnames(P)) {
+        factors = append(factors, paste('', i, '!A', sep = ' '))
+      }
       writeLines(c(
         '!NODISPLAY !XML',
         paste('Cross Validation with', phenoName, sep = ' '),
-        paste('', 'Genotype !A', sep = ' '),
-        paste('', phenoName, sep = ' '),
+        factors,
+        # paste('', 'Genotype !A', sep = ' '),
+        # paste('', phenoName, sep = ' '),
         paste('', 'CVgroup 10 !=Genotype !-1 !MOD 10 !+1', sep = ' '),
         '!CYCLE 1:11',
         paste('../', genoName, '.grm', sep = ''),
         'data.asd !SKIP 0 MAXIT 100 !EXTRA 5 !FILTER CVgroup !EXCLUDE $I  !KCV grm1(Genotype)',
         '',
-        paste(phenoName, '~ mu !r grm1(Genotype)', sep = ' ')
+        paste(phenoName, model_term, sep = ' ')
       ), as0)
       close(as0)
       
@@ -100,28 +108,30 @@ analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=F
       cmd = append(cmd, 'popd')
       
       nLines = length(P)
-      foldSize=floor(nLines/10)
+      foldSize=floor(nLines/(10 * length(colnames(P))))
       currentFoldPos=1
       for(i in c(1:10)){
         Y <- as.matrix(P)
-        Y <- cbind(rownames(Y), 0, Y[,1])
-        colnames(Y) <- c('Genotype', 'Missing', phenoName)
+        # Y <- cbind(Y[, 'Genotype'], 0, Y[,-1])
+        # colnames(Y) <- c('Genotype', 'Missing', phenoName)
         newpos <- min(currentFoldPos+foldSize, nLines+1)
-        Y[currentFoldPos:(newpos-1), 2] <- 1
-        Y[currentFoldPos:(newpos-1), 3] <- 'NA'
+        # Y[currentFoldPos:(newpos-1), 2] <- 1
+        Y[currentFoldPos:(newpos-1), ncol(Y)] <- 'NA'
         dir.create(file.path(phenodir, toString(i)), showWarnings = FALSE)
-        write.table(Y, file = file.path(phenodir, toString(i), 'data.asd'), sep = '\t', col.names = T, row.names = F, quote = FALSE, na = '')
+        write.table(Y, file = file.path(phenodir, toString(i), 'data.asd'), 
+                    sep = '\t', col.names = T, row.names = F, quote = FALSE, na = '')
         asfile <- file(file.path(phenodir, toString(i), paste(phenoName, '.as', sep = '')))
         writeLines(c(
           '!NODISPLAY !XML',
-          paste('Phenotypic with', phenoName, sep = ' '),
-          paste('', 'Genotype !A', sep = ' '),
-          paste('', 'Missing !I', '2', sep = ' '),
-          paste('', phenoName, sep = ' '),
+          paste('Phenotypic analysis with', phenoName, sep = ' '),
+          factors,
+          # paste('', 'Genotype !A', sep = ' '),
+          # paste('', 'Missing !I', '2', sep = ' '),
+          # paste('', phenoName, sep = ' '),
           paste('../', genoName, '.grm', sep = ''),
           'data.asd !SKIP 1 MAXIT 100 !EXTRA 5 !MVINCLUDE',
           '',
-          paste(phenoName, '~ mu !r grm1(Genotype)', sep = ' '),
+          paste(phenoName, model_term, sep = ' '),
           paste('predict', 'grm1(Genotype)', sep = ' ')
         ), asfile)
         close(asfile)
@@ -133,7 +143,8 @@ analysisprep <- function(outdir, outfolder, phenofilename, genofilename, isGRM=F
         currentFoldPos=newpos
       }
     }else{
-      write.table(P, file = file.path(phenodir, 'data.asd'), sep = '\t', col.names = !isGRM, quote = FALSE)   
+      write.table(P, file = file.path(phenodir, 'data.asd'), sep = '\t', 
+                  col.names = !isGRM, row.names = F, quote = FALSE)   
       cmd = append(cmd, paste(
         'acc <- crossvalidation(\"',
         file.path(phenodir, 'data.asd'), '\",\"',
