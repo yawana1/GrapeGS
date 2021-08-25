@@ -2,6 +2,9 @@ bivar <- function(outdir, pheno.P, Ginv.sparse, traits){
   library(asreml)
   setwd(outdir)
   
+  pheno.P$t1 <- `$`(pheno.P, traits[1])
+  pheno.P$t2 <- `$`(pheno.P, traits[2])
+  
   # 7. Fit model.A
   mv.A <- asreml(cbind(FB,LB) ~ trait + trait:Flower              # 1
                  , random = ~us(trait):vm(Genotype, Ginv.sparse)                # 2
