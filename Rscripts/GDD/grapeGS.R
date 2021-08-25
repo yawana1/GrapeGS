@@ -1,6 +1,13 @@
-phenofile = '/Users/yn259/Box/research/HC/phenos/GDD.csv'
-genofile = '/Users/yn259/Box/research/HC/rh/none/matrix.incidence.txt'
-outdir = '/Users/yn259/Box/research/HC'
+# Mac folder paths
+# phenofile = '/Users/yn259/Box/research/HC/phenos/GDD.csv'
+# genofile = '/Users/yn259/Box/research/HC/rh/none/matrix.incidence.txt'
+# outdir = '/Users/yn259/Box/research/HC'
+
+# Linux folder paths
+phenofile = '/media/yn259/data/research/HC/phenos/GDD.csv'
+genofile = '/media/yn259/data/research/HC/rh/none/matrix.incidence.txt'
+outdir = '/media/yn259/data/research/HC'
+
 traits = c('Diff', 'FB', 'LB')
 maf = 0.05
 marker.callrate = 0.2
@@ -8,7 +15,6 @@ ind.callrate = 0.2
 validationFactor = 'Genotype'
 
 library(ASRgenomics)
-library(asreml)
 
 # 0. Create output folder
 outdir = file.path(outdir, "analysis")
@@ -59,62 +65,54 @@ dev.off()
 # 4. Load phenotypic data
 sep = ifelse(endsWith(phenofile, ".csv"), ",", "\t")
 P <- read.table(phenofile, sep=sep, header=T)
-P_meta <- P[,!names(P) %in% traits]
-for(tr in traits){
-  tr = 'Diff'
-  traitdir = file.path(outdir, tr)
-  dir.create(traitdir, showWarnings = FALSE)
-  setwd(traitdir)
-  
-  # 5. Match pheno and geno data
-  pheno.P <- P_meta
-  pheno.P$trait <- P[,tr]
-  pheno.P = pheno.P[!is.na(pheno.P[, 'trait']),]
-  pheno.S <- match.kinship2pheno(K = G_bend, pheno.data = pheno.P,
-                                 indiv = "Genotype", clean = TRUE, mism = TRUE)
-  pheno.P <- pheno.P[pheno.S$matchesP, ]
-  pheno.G <- G_bend[pheno.S$matchesK, pheno.S$matchesK]
-  
-  # 6. Get G inverse and sparse form
-  Ginv.sparse <- G.inverse(G = pheno.G, sparseform = TRUE)$Ginv
-  
-  # 7. Cross validation
-  pheno.P$Genotype <- as.factor(pheno.P$Genotype)
-  pheno.P$Year <- as.factor(pheno.P$Year)
-  pheno.idv <- unique(pheno.P[, validationFactor])
-  nLines = length(pheno.idv)
-  foldSize=floor(nLines/(10))
-  currentFoldPos=1
-  res <- data.frame(Genotype = pheno.idv, prediction = numeric(nLines))
-  for(i in c(1:10)){
-    i = 1
-    Y <- pheno.P
-    newpos <- min(currentFoldPos+foldSize, nLines+1)
-    idv <- pheno.idv[currentFoldPos:(newpos-1)]
-    Y$trait[Y$Genotype %in% idv] <- NA
-    # Y$trait[currentFoldPos:(newpos-1)] <- NA
-    GBLUP <- asreml(fixed = trait ~ Year+Flower, random = ~vm(Genotype, Ginv.sparse),
-                    residual = ~idv(units), na.action = na.method(y = "include"),
-                    data = Y)
-    if(GBLUP$converge==TRUE){
-      pred = predict(GBLUP, classify = "Genotype", trace=T)$pvals
-      vpredict(GBLUP, h2 ~ V1/(V1 + V2))
-      res$prediction[currentFoldPos:(newpos-1)] <- pred$predicted.value[currentFoldPos:(newpos-1)]
-      png(file = paste('prediction', i, 'png', sep='.'), width = 1024, height = 1024)
-      plot(GBLUP)
-      dev.off()
-    }
-  }
-}
 
-
-
-# 7. Fit a Genomic-BLUP (GBLUP) model with ASReml-R
+# 5. Match pheno and geno data
+pheno.S <- match.kinship2pheno(K = G_bend, pheno.data = P,
+                               indiv = "Genotype", clean = TRUE, mism = TRUE)
+pheno.G <- G_bend[pheno.S$matchesK, pheno.S$matchesK]
+pheno.P <- P[pheno.S$matchesP, ]
 pheno.P$Genotype <- as.factor(pheno.P$Genotype)
 pheno.P$Year <- as.factor(pheno.P$Year)
-GBLUP <- asreml(fixed = Diff ~ Year, random = ~vm(Genotype, Ginv.sparse),
-                residual = ~idv(units), na.action = na.method(y = "include"),
-                data = pheno.P)
-if(GBLUP$converge==TRUE){
-  pred = predict(GBLUP, classify = "Genotype", trace=T)$pvals
+pheno.P$Flower <- as.factor(pheno.P$Flower)
+
+# 6. Get G inverse and sparse form
+Ginv.sparse <- G.inverse(G = pheno.G, sparseform = TRUE)$Ginv
+
+# source('/home/yn259/workspace/GrapeGS/Rscripts/GDD/bivar.R')
+# mv.A <- bivar(outdir, pheno.P, Ginv.sparse, c('FB', 'LB'))
+
+# 7. Fit model.A
+mv.A <- asreml(cbind(FB,LB) ~ trait + trait:Flower              # 1
+               , random = ~us(trait):vm(Genotype, Ginv.sparse)                # 2
+               + at(trait):Year
+               , residual = ~ units:us(trait)                                 # 3
+               , na.action = na.method(y = "include")
+               , data = pheno.P)
+
+if(mv.A$converge==TRUE){
+  pred = predict(mv.A, classify = "Genotype", trace=T)$pvals
+  res$prediction[currentFoldPos:(newpos-1)] <- pred$predicted.value[currentFoldPos:(newpos-1)]
+  png(file = paste('bivar.A', 'png', sep='.'), width = 1024, height = 1024)
+  plot(mv.A)
+  dev.off()
 }
+# diag
+# corgh
+# xfa1
+# us
+# rr1
+# 1:  Bivariate model of FB & LB, fitting the mean of each and sex as fixed effects
+# 2:  Random G structure defined as an unstructured covariance matrix (us). Initial 
+#     starting values of va1=1 cov12=0.1 va2=1 
+# 3:  Residual (R) structure defined as an unstructured covar matrix, initial starting 
+#     values of va1, cov12, va2.
+
+# 8. Fix the value of the covariance to zero (COVA = 0)
+mv.Z <- asreml(cbind(FB,LB) ~ trait + trait:Flower                        
+               , random = ~diag(trait):vm(Genotype, Ginv.sparse)
+               + at(trait):Year
+               , residual = ~ units:us(trait)             
+               , na.action = na.method(y = "include")
+               , data = pheno.P)
+
+# pred = predict(mv, classify = "trait:Genotype", trace=T)$pvals
