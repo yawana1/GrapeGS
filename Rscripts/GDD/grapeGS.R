@@ -1,12 +1,12 @@
 # Mac folder paths
-# phenofile = '/Users/yn259/Box/research/HC/phenos/GDD.csv'
-# genofile = '/Users/yn259/Box/research/HC/rh/none/matrix.incidence.txt'
-# outdir = '/Users/yn259/Box/research/HC'
+phenofile = '/Users/yn259/Box/research/HC/phenos/GDD.csv'
+genofile = '/Users/yn259/Box/research/HC/rh/none/matrix.incidence.txt'
+outdir = '/Users/yn259/Box/research/HC'
 
 # Linux folder paths
-phenofile = '/media/yn259/data/research/HC/phenos/GDD.csv'
-genofile = '/media/yn259/data/research/HC/rh/none/matrix.incidence.txt'
-outdir = '/media/yn259/data/research/HC'
+# phenofile = '/media/yn259/data/research/HC/phenos/GDD.csv'
+# genofile = '/media/yn259/data/research/HC/rh/none/matrix.incidence.txt'
+# outdir = '/media/yn259/data/research/HC'
 
 traits = c('Diff', 'FB', 'LB')
 maf = 0.05
@@ -82,10 +82,17 @@ Ginv.sparse <- G.inverse(G = pheno.G, sparseform = TRUE)$Ginv
 # mv.A <- bivar(outdir, pheno.P, Ginv.sparse, c('FB', 'LB'))
 
 # 7. Fit model.A
-mv.A <- asreml(cbind(FB,LB) ~ trait + trait:Flower              # 1
-               , random = ~us(trait):vm(Genotype, Ginv.sparse)                # 2
-               + at(trait):Year
-               , residual = ~ units:us(trait)                                 # 3
+library(asreml)
+# mv.A <- asreml(cbind(FB,LB) ~ trait + trait:Flower            
+#                , random = ~us(trait):vm(Genotype, Ginv.sparse)                
+#                + at(trait):Year
+#                , residual = ~ id(units):us(trait)                               
+#                , na.action = na.method(y = "include")
+#                , data = pheno.P)
+
+mv.A <- asreml(cbind(FB,LB) ~ trait + trait:Flower            
+               , random = ~at(trait):corgh(Year):vm(Genotype, Ginv.sparse)                
+               , residual = ~ id(units):us(trait)                               
                , na.action = na.method(y = "include")
                , data = pheno.P)
 
