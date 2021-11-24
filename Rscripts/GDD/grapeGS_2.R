@@ -1,39 +1,34 @@
-rm(list=ls()) 
+###############################
+# Genomic Selection           #
+# K-fold cross-validation     #
+###############################
 
-# SAG Windows folders
-# setwd("C:/Users/Desktop/Atanda")
-# list.files()
-# phenofile <- read.csv(file='GDD.csv', header=TRUE)
-# genofile <- read.table(file='matrix.incidence.txt', header=TRUE)
-# outdir <- "C:/Users/Desktop/Atanda"
+rm(list = ls())
 
-# Mac folder paths
-# phenofile = '/Users/yn259/Box/research/HC/phenos/GDD.csv'
-# genofile = '/Users/yn259/Box/research/HC/rh/none/matrix.incidence.txt'
-# outdir = '/Users/yn259/Box/research/HC'
-
-# Linux folder paths
+# linux input parameters
+analysis_name = 'rh_hap.matrix.incidence'
 phenofile = '/media/yn259/data/research/HC/phenos/GDD.csv'
 genofile = '/media/yn259/data/research/HC/rh/none/matrix.incidence.txt'
 outdir = '/media/yn259/data/research/HC'
-
-traits = c('Diff', 'FB', 'LB')
-maf = 0.05
+isBase = FALSE
 marker.callrate = 0.1
 ind.callrate = 0.1
-validationFactor = 'Genotype'
+maf = 0.05
+traits = c('FB', 'LB', 'Diff')
 
-library(ASRgenomics)
-
-# 0. Create output folder
-outdir = file.path(outdir, "analysis")
+# 0. create output folder
+outdir = file.path(outdir, 'analysis')
+dir.create(outdir, showWarnings = FALSE)
+outdir = file.path(outdir, analysis_name)
 dir.create(outdir, showWarnings = FALSE)
 setwd(outdir)
 
-# 1. Reading and Filtering a Molecular Dataset
+library(ASRgenomics)
+
+# 1. Read and Filter molecular dataset
 M = read.table(file=genofile, header=TRUE)
 dim(M)  # 157x6723
-# M[1:10,1:10]
+M[1:5,1:5]
 
 M = as.matrix(M)
 M_filter <- qc.filtering(M = M, base = FALSE, ref = NULL,
@@ -245,10 +240,10 @@ plot(ub.B) # Clearly some outliers in year 2019 (see also MSE_2019 = 9166 much l
 pheno.P2021 <- pheno.P[pheno.P$Year =='2021',]
 
 mv.2021 <- asreml(cbind(FB,LB) ~ trait + trait:Flower            
-               , random = ~corgh(trait):vm(Genotype, Ginv.sparse)                
-               , residual = ~ id(units):us(trait)                               
-               , na.action = na.method(y = "include")
-               , data = pheno.P2021)
+                  , random = ~corgh(trait):vm(Genotype, Ginv.sparse)                
+                  , residual = ~ id(units):us(trait)                               
+                  , na.action = na.method(y = "include")
+                  , data = pheno.P2021)
 summary(mv.2021)$varcomp
 plot(mv.2021) # not outliers in this case.
 
